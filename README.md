@@ -30,22 +30,38 @@ npm run dev
 `npm run db:down` หยุดฐานข้อมูล (ข้อมูลยังอยู่ใน Docker volume `sportday-db`)
 ถ้าสลับ `DATABASE_URL` ไปมา ให้ลบโฟลเดอร์ `.next` ก่อนรัน `npm run dev` เพราะ Next.js เก็บผล query ไว้ใน `.next/cache`
 
-### แยก env สำหรับ dev และ production
+### แยก env สำหรับ dev, preview และ production
 
 | ไฟล์ | ใช้กับ | ค่าข้างใน |
 |---|---|---|
 | `.env.local` | `npm run dev`, test, คำสั่ง db ปกติ | ฐานข้อมูล Docker, Blob store `sport-day-blob-dev`, `BETTER_AUTH_SECRET` และบัญชีผู้ดูแลของ dev เท่านั้น |
+| `.env.preview` | เฉพาะคำสั่งที่ลงท้ายด้วย `:preview` | `DATABASE_URL` ของฐานข้อมูล preview และบัญชีผู้ดูแลของ preview |
 | `.env.prod` | เฉพาะคำสั่งที่ลงท้ายด้วย `:prod` | `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BLOB_READ_WRITE_TOKEN`, `ADMIN_*` ของ production |
 
-ทั้งสองไฟล์ไม่ขึ้น git และค่าใน `.env.local` ไม่ซ้ำกับ production เลย จึงทดสอบทุกอย่างในเครื่องได้
-(รวมถึง login และอัปโหลดรูป) โดยไม่กระทบเว็บจริง · เว็บบน Vercel ใช้ environment variables ของ Vercel
-ไม่ได้อ่านไฟล์ใดในนี้ · คำสั่ง `:prod` ใช้ค่าใน `.env.prod` ก่อน ตัวที่ไม่มีจึงอ่านจาก `.env.local`
+ทุกไฟล์ไม่ขึ้น git และค่าในแต่ละไฟล์ไม่ซ้ำกัน จึงทดสอบทุกอย่างได้ (รวมถึง login และอัปโหลดรูป)
+โดยไม่กระทบเว็บจริง · เว็บบน Vercel ใช้ environment variables ของ Vercel ไม่ได้อ่านไฟล์ใดในนี้ ·
+คำสั่ง `:prod` / `:preview` ใช้ค่าในไฟล์ของตัวเองก่อน ตัวที่ไม่มีจึงอ่านจาก `.env.local`
 
 | คำสั่ง | |
 |---|---|
-| `npm run db:migrate:prod` | apply migration กับ production |
-| `npm run db:seed:prod` | seed ทีมสีและค่าตั้งต้นใน production (รันซ้ำได้) |
-| `npm run admin:create:prod` | สร้างบัญชีผู้ดูแลใน production |
+| `npm run db:migrate:prod` / `db:migrate:preview` | apply migration กับ production / preview |
+| `npm run db:seed:prod` / `db:seed:preview` | seed ทีมสีและค่าตั้งต้น (รันซ้ำได้) |
+| `npm run db:seed-demo:preview` | ใส่ข้อมูลตัวอย่างในฐานข้อมูล preview (ใช้กับ production ไม่ได้) |
+| `npm run admin:create:prod` / `admin:create:preview` | สร้างบัญชีผู้ดูแล |
+
+### Preview deploy (Vercel)
+
+ทุก PR และทุก branch ที่ไม่ใช่ `main` ได้ Preview deploy ที่แยกจากเว็บจริงทั้งหมด:
+
+| | Production | Preview |
+|---|---|---|
+| ฐานข้อมูล | Prisma Postgres ของจริง | Prisma Postgres แยก (ค่าใน `.env.preview`) |
+| Blob store | `sport-day-blob` | `sport-day-blob-dev` (ใช้ร่วมกับ dev ในเครื่อง) |
+| `BETTER_AUTH_SECRET` | ของ production | แยกของตัวเอง |
+| `BETTER_AUTH_URL` | โดเมนจริง | ไม่ต้องตั้ง — ใช้ URL ที่ Vercel ให้แต่ละ deploy ([lib/auth.ts](lib/auth.ts)) |
+
+login หน้า admin ของ preview ด้วยบัญชีใน `.env.preview` · migration ใหม่ต้องรัน `npm run db:migrate:preview`
+ก่อนทดสอบใน preview เหมือนกับ production
 
 ### Environment variables
 
@@ -124,6 +140,6 @@ CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) รันชุดน�
 
 1. Push ขึ้น GitHub แล้ว import โปรเจกต์ใน Vercel
 2. ใส่ environment variables ตามตารางด้านบน (`BETTER_AUTH_URL` = โดเมนจริง)
-3. ใส่ค่าของ production ใน `.env.prod` (ดู [แยก env สำหรับ dev และ production](#แยก-env-สำหรับ-dev-และ-production))
+3. ใส่ค่าของ production ใน `.env.prod` (ดู [แยก env สำหรับ dev, preview และ production](#แยก-env-สำหรับ-dev-preview-และ-production))
    แล้วรัน `npm run db:migrate:prod`, `npm run db:seed:prod`, `npm run admin:create:prod` หนึ่งครั้ง
    (ทุกครั้งที่มี migration ใหม่ ต้องรัน `npm run db:migrate:prod` เองก่อน push ขึ้น main)
