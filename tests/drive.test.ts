@@ -97,12 +97,67 @@ describe("getGallery", () => {
     expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 
-  it("reports an error instead of throwing when Drive refuses", async () => {
+  it("reports an error instead of throwing when Drive refuses, without retrying", async () => {
     vi.stubEnv("GOOGLE_DRIVE_API_KEY", "test-key");
-    vi.stubGlobal("fetch", vi.fn(async () => new Response("forbidden", { status: 403 })));
+    const fetchMock = vi.fn(async () => new Response("forbidden", { status: 403 }));
+    vi.stubGlobal("fetch", fetchMock);
     vi.spyOn(console, "error").mockImplementation(() => {});
     const { getGallery } = await import("@/lib/queries/gallery");
     const gallery = await getGallery(`https://drive.google.com/drive/folders/${FOLDER}`);
     expect(gallery.status).toBe("error");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("tries again after a timeout or a Drive outage", async () => {
+    vi.stubEnv("GOOGLE_DRIVE_API_KEY", "test-key");
+    const fetchMock = vi
+      .fn()
+      .mockRejectedValueOnce(new DOMException("The operation was aborted due to timeout", "TimeoutError"))
+      .mockResolvedValueOnce(new Response("unavailable", { status: 503 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ files: [image("ROOTPHOTO1")] })));
+    vi.stubGlobal("fetch", fetchMock);
+    const { getGallery } = await import("@/lib/queries/gallery");
+
+    const gallery = await getGallery(`https://drive.google.com/drive/folders/${FOLDER}`);
+    if (gallery.status !== "ok") throw new Error(`unexpected ${gallery.status}`);
+    expect(gallery.root.photoCount).toBe(1);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
+  it("gives up after three tries", async () => {
+    vi.stubEnv("GOOGLE_DRIVE_API_KEY", "test-key");
+    const fetchMock = vi.fn(async () => new Response("rate limited", { status: 429 }));
+    vi.stubGlobal("fetch", fetchMock);
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const { getGallery } = await import("@/lib/queries/gallery");
+
+    const gallery = await getGallery(`https://drive.google.com/drive/folders/${FOLDER}`);
+    expect(gallery.status).toBe("error");
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
+  it("lists many subfolders a few at a time", async () => {
+    vi.stubEnv("GOOGLE_DRIVE_API_KEY", "test-key");
+    const subfolders = Array.from({ length: 20 }, (_, i) => folder(`SUBFOLDER${String(i).padStart(2, "0")}`, `Day ${i}`));
+    let running = 0;
+    let most = 0;
+    const fetchMock = vi.fn(async (input: URL) => {
+      running++;
+      most = Math.max(most, running);
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      running--;
+      const parent = /'([^']+)' in parents/.exec(input.searchParams.get("q")!)![1];
+      const files = parent === FOLDER ? subfolders : [image(`${parent}PHOTO`)];
+      return new Response(JSON.stringify({ files }));
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const { getGallery } = await import("@/lib/queries/gallery");
+
+    const gallery = await getGallery(`https://drive.google.com/drive/folders/${FOLDER}`);
+    if (gallery.status !== "ok") throw new Error(`unexpected ${gallery.status}`);
+    expect(gallery.root.albums).toHaveLength(20);
+    expect(gallery.root.photoCount).toBe(20);
+    expect(most).toBeGreaterThan(1);
+    expect(most).toBeLessThanOrEqual(6);
   });
 });
