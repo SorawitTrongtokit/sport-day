@@ -11,8 +11,13 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     start_url: "/",
     display: "standalone",
     background_color: "#f5f5f5",
-    theme_color: "#111111",
+    // Matches the viewport themeColor in app/layout.tsx.
+    theme_color: "#f5f5f5",
     lang: "th",
-    icons: [{ src: "/icon", sizes: "512x512", type: "image/png" }],
+    // The uploaded logo first, as the tab icon uses it; the team-color tile stays as a fallback.
+    icons: [
+      ...(config.schoolLogoUrl ? [{ src: config.schoolLogoUrl, sizes: "any" }] : []),
+      { src: "/icon", sizes: "512x512", type: "image/png" },
+    ],
   };
 }

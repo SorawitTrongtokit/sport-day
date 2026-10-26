@@ -74,7 +74,6 @@ login หน้า admin ของ preview ด้วยบัญชีใน `.e
 | `BETTER_AUTH_SECRET` | คีย์เข้ารหัส session — สร้างด้วย `npx @better-auth/cli secret` |
 | `BETTER_AUTH_URL` | Origin ของเว็บ (`http://localhost:3000` หรือโดเมนจริง) |
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob สำหรับอัปโหลดโลโก้/รูป Highlight/รูปปก (ไม่ใส่ก็ใช้งานส่วนอื่นได้) |
-| `GOOGLE_DRIVE_API_KEY` | ให้หน้า `/gallery` ดึงรูปจากโฟลเดอร์ Drive มาแสดงเป็นอัลบั้ม (ไม่ใส่ จะเป็นปุ่มลิงก์ไป Drive แทน) — ดู [Gallery จาก Google Drive](#gallery-จาก-google-drive) |
 | `GOOGLE_DRIVE_API_KEY` | API key ของ Google Cloud ที่เปิดเฉพาะ Google Drive API ให้หน้า `/gallery` ดึงรูปจากโฟลเดอร์ Drive มาแสดงเป็นอัลบั้ม (ไม่ใส่ หน้า Gallery จะเป็นปุ่มลิงก์ไป Drive แทน) — ดู [Gallery จาก Google Drive](#gallery-จาก-google-drive) |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` | ใช้ครั้งเดียวตอน `npm run admin:create` (รหัสผ่านอย่างน้อย 10 ตัวอักษร) |
 
