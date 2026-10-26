@@ -9,8 +9,8 @@ const nextConfig: NextConfig = {
     ],
   },
   experimental: {
-    // Admin forms can carry one announcement attachment of up to 5 MB.
-    serverActions: { bodySizeLimit: "6mb" },
+    // Admin forms carry at most one 4 MB attachment; Vercel caps bodies at 4.5 MB anyway.
+    serverActions: { bodySizeLimit: "4.5mb" },
   },
 };
 

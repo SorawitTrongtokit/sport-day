@@ -13,3 +13,11 @@ export function detectImageType(bytes: Uint8Array): ImageType | null {
   }
   return null;
 }
+
+export type UploadType = ImageType | "application/pdf";
+
+/** Like detectImageType, but also accepts PDF documents ("%PDF-"). */
+export function detectUploadType(bytes: Uint8Array): UploadType | null {
+  const isPdf = [0x25, 0x50, 0x44, 0x46, 0x2d].every((byte, i) => bytes[i] === byte);
+  return detectImageType(bytes) ?? (isPdf ? "application/pdf" : null);
+}

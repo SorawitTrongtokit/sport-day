@@ -1,5 +1,5 @@
 {
-  "id": "93cb848c-e1b7-43f5-86bc-563eca12f3ad",
+  "id": "b505f46d-4b15-430c-ac10-3e14cb7c0c92",
   "prevId": "9dd66003-e1f5-4b9b-a2dc-1cabafac9014",
   "version": "7",
   "dialect": "postgresql",
@@ -133,6 +133,24 @@
           "primaryKey": false,
           "notNull": true
         },
+        "attachment_url": {
+          "name": "attachment_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "attachment_type": {
+          "name": "attachment_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "attachment_name": {
+          "name": "attachment_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "published_at": {
           "name": "published_at",
           "type": "date",
@@ -159,27 +177,6 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
-        },
-        "attachment_url": {
-          "name": "attachment_url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "default": null
-        },
-        "attachment_type": {
-          "name": "attachment_type",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "default": null
-        },
-        "attachment_name": {
-          "name": "attachment_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "default": null
         }
       },
       "indexes": {

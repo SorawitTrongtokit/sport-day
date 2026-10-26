@@ -1,4 +1,4 @@
-import { ChevronDown, FileText, Image as ImageIcon } from "lucide-react";
+import { ChevronDown, FileText } from "lucide-react";
 import type { Announcement } from "@/lib/queries/announcements";
 import { formatThaiDate } from "@/lib/date";
 
@@ -28,7 +28,7 @@ export function AnnouncementList({ announcements }: { announcements: Announcemen
               {item.attachmentUrl && item.attachmentType === "image" && (
                 <a href={item.attachmentUrl} target="_blank" rel="noreferrer" className="block w-fit max-w-full">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={item.attachmentUrl} alt={item.attachmentName ?? `รูปประกอบ: ${item.title}`} className="max-h-[28rem] max-w-full rounded-lg border object-contain" />
+                  <img src={item.attachmentUrl} alt={`รูปประกอบ: ${item.title}`} className="max-h-[28rem] max-w-full rounded-lg border object-contain" />
                 </a>
               )}
               {item.attachmentUrl && item.attachmentType === "pdf" && (
