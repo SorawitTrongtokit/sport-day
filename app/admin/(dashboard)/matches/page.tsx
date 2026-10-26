@@ -1,4 +1,4 @@
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Copy, Pencil, Plus, Trash2 } from "lucide-react";
 import { DeleteDialog, FormDialog } from "@/components/admin/action-form";
 import { AdminPageHeader, EmptyRow, Pager, Panel } from "@/components/admin/admin-page";
 import { MatchForm } from "@/components/admin/match-form";
@@ -94,6 +94,26 @@ export default async function AdminMatchesPage({
                   </TableCell>
                   <TableCell>
                     <div className="flex justify-end gap-2">
+                      <FormDialog
+                        action={saveMatch}
+                        title="คัดลอกการแข่งขัน"
+                        description="สร้างการแข่งขันใหม่จากรายการนี้ แก้เฉพาะส่วนที่ต่างแล้วกดบันทึก"
+                        trigger={<Button variant="outline" size="sm" />}
+                        triggerLabel={
+                          <>
+                            <Copy aria-hidden />
+                            คัดลอก
+                          </>
+                        }
+                      >
+                        <MatchForm
+                          match={match}
+                          copy
+                          sports={sports}
+                          teams={teams}
+                          defaultDate={today}
+                        />
+                      </FormDialog>
                       <FormDialog
                         action={saveMatch}
                         title="แก้ไขการแข่งขัน"
