@@ -1,6 +1,7 @@
 import { attachDatabasePool } from "@vercel/functions";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
+import { retryDroppedReads } from "./retry-reads";
 import * as schema from "./schema";
 
 const globalForDb = globalThis as unknown as { pgPool?: Pool };
@@ -23,6 +24,8 @@ function createPool() {
   // An idle connection dropped by the server is just removed from the pool;
   // without a listener the error would crash the process.
   pool.on("error", (error) => console.warn(`Idle database connection closed: ${error.message}`));
+  // Even so, production still saw reads fail on a dropped connection after idle periods.
+  retryDroppedReads(pool);
   return pool;
 }
 
