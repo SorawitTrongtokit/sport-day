@@ -22,6 +22,10 @@ export const auth = betterAuth({
   // Counters live in the database: in-memory counters are per serverless
   // instance, so they would not stop a brute-force across instances.
   rateLimit: { storage: "database" },
+  // Every admin page checks the session before loading its data. A signed cookie
+  // holds the session for 5 minutes, so most page loads skip that database round trip.
+  // Sign-out clears it at once; a session revoked elsewhere lasts at most 5 more minutes.
+  session: { cookieCache: { enabled: true, maxAge: 5 * 60 } },
   emailAndPassword: {
     enabled: true,
     disableSignUp: true,
