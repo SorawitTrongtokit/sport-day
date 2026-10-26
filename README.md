@@ -74,6 +74,8 @@ login หน้า admin ของ preview ด้วยบัญชีใน `.e
 | `BETTER_AUTH_SECRET` | คีย์เข้ารหัส session — สร้างด้วย `npx @better-auth/cli secret` |
 | `BETTER_AUTH_URL` | Origin ของเว็บ (`http://localhost:3000` หรือโดเมนจริง) |
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob สำหรับอัปโหลดโลโก้/รูป Highlight/รูปปก (ไม่ใส่ก็ใช้งานส่วนอื่นได้) |
+| `GOOGLE_DRIVE_API_KEY` | ให้หน้า `/gallery` ดึงรูปจากโฟลเดอร์ Drive มาแสดงเป็นอัลบั้ม (ไม่ใส่ จะเป็นปุ่มลิงก์ไป Drive แทน) — ดู [Gallery จาก Google Drive](#gallery-จาก-google-drive) |
+| `GOOGLE_DRIVE_API_KEY` | API key ของ Google Cloud ที่เปิดเฉพาะ Google Drive API ให้หน้า `/gallery` ดึงรูปจากโฟลเดอร์ Drive มาแสดงเป็นอัลบั้ม (ไม่ใส่ หน้า Gallery จะเป็นปุ่มลิงก์ไป Drive แทน) — ดู [Gallery จาก Google Drive](#gallery-จาก-google-drive) |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` | ใช้ครั้งเดียวตอน `npm run admin:create` (รหัสผ่านอย่างน้อย 10 ตัวอักษร) |
 
 ### ข้อมูลเดโม
@@ -98,6 +100,23 @@ login หน้า admin ของ preview ด้วยบัญชีใน `.e
 8. **หน้าเว็บ** — เปลี่ยนรูปปกหน้าแรก (PNG, JPEG, GIF, WebP, MOV, MP4 ไม่เกิน 50 MB
    อัปโหลดจาก browser ตรงไป Vercel Blob) และสวิตช์เปิด/ปิดแต่ละส่วนของหน้าแรกและแต่ละหน้าในเมนู
    หน้าที่ปิดจะหายจากเมนูและตอบ 404 — ค่าเริ่มต้นปิด **ตารางการแข่งขัน** ไว้ (ระบบยังอยู่ครบ เปิดกลับได้ทุกเมื่อ)
+
+## Gallery จาก Google Drive
+
+หน้า `/gallery` ดึงรายชื่อรูปจากโฟลเดอร์ใน **Settings → ลิงก์ Google Drive** ผ่าน Drive API แล้วแสดงในเว็บ
+(ไฟล์รูปยังอยู่ใน Drive เว็บไม่ได้เก็บเอง)
+
+- **โฟลเดอร์ย่อย = อัลบั้ม** ซ้อนกันได้ 4 ชั้น รวมไม่เกิน 150 โฟลเดอร์ · รูปที่อยู่นอกโฟลเดอร์ย่อยแสดงเป็น "รูปอื่น ๆ"
+- หน้าอัลบั้ม `/gallery/[folderId]` เปิดได้เฉพาะโฟลเดอร์ที่อยู่ใต้โฟลเดอร์หลักเท่านั้น
+- รายชื่อรูปถูกแคช 5 นาที — กดบันทึกหน้า Settings เพื่อโหลดใหม่ทันที
+- ถ้าไม่มี key, ลิงก์ไม่ใช่โฟลเดอร์ หรือเรียก API ไม่สำเร็จ หน้าเว็บจะกลับไปแสดงปุ่มลิงก์ไป Drive
+
+ตั้งค่า:
+
+1. โฟลเดอร์หลักต้องแชร์แบบ **ทุกคนที่มีลิงก์ดูได้** (โฟลเดอร์ย่อยและรูปจะได้สิทธิ์ตามไปด้วย)
+2. ใน [Google Cloud Console](https://console.cloud.google.com/) เปิด **Google Drive API** แล้วสร้าง API key
+   ตั้ง *API restrictions* ให้ใช้ได้เฉพาะ Google Drive API (key ถูกเรียกจาก server จึงจำกัดด้วย referrer ไม่ได้)
+3. ใส่ key เป็น `GOOGLE_DRIVE_API_KEY` ใน `.env.local` และใน environment variables ของ Vercel
 
 ## หลักการสำคัญ
 

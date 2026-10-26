@@ -39,7 +39,7 @@ export function SettingsForm({
         type="url"
         defaultValue={config.galleryDriveUrl ?? ""}
         placeholder="https://drive.google.com/drive/folders/..."
-        hint="ลิงก์โฟลเดอร์รูปที่เปิดแชร์แบบทุกคนที่มีลิงก์ดูได้"
+        hint="ลิงก์โฟลเดอร์รูปที่เปิดแชร์แบบทุกคนที่มีลิงก์ดูได้ โฟลเดอร์ย่อยจะแสดงเป็นอัลบั้ม · รูปใหม่ใน Drive ขึ้นเว็บภายใน 5 นาที หรือกดบันทึกหน้านี้เพื่อโหลดใหม่ทันที"
       />
       <ImageField
         name="schoolLogo"
