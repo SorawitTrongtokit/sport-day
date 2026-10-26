@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Noto_Sans_Thai } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { MotionProvider } from "@/components/shared/motion";
 import { Toaster } from "@/components/ui/sonner";
 import { getSiteConfigSafe } from "@/lib/queries/config";
@@ -44,6 +45,7 @@ export default function RootLayout({
       <body className="min-h-dvh">
         <MotionProvider>{children}</MotionProvider>
         <Toaster position="top-center" />
+        <Analytics />
       </body>
     </html>
   );
