@@ -41,6 +41,11 @@ export function invalidate(...tags: CacheTag[]) {
   for (const tag of tags) updateTag(tag);
 }
 
+/** For an edit whose row another admin deleted while the form was open. */
+export function missing(what: string): ActionState {
+  return { ok: false, message: `ไม่พบ${what}นี้ อาจถูกลบไปแล้ว กรุณาโหลดหน้าใหม่` };
+}
+
 function pgErrorCode(error: unknown): string | undefined {
   for (let e: unknown = error; e && typeof e === "object"; e = (e as { cause?: unknown }).cause) {
     const code = (e as { code?: unknown }).code;

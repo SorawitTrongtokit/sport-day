@@ -13,6 +13,7 @@ import {
   failure,
   invalid,
   invalidate,
+  missing,
   UNAUTHORIZED,
   uploadFile,
 } from "./helpers";
@@ -42,14 +43,17 @@ export async function saveHighlight(
   };
 
   let previousImage: string | null = null;
+  let found: boolean;
   try {
-    await db.transaction(async (tx) => {
+    found = await db.transaction(async (tx) => {
       if (id) {
         const [current] = await tx
           .select({ imageUrl: highlights.imageUrl })
           .from(highlights)
-          .where(eq(highlights.id, id));
-        previousImage = current?.imageUrl ?? null;
+          .where(eq(highlights.id, id))
+          .for("update");
+        if (!current) return false;
+        previousImage = current.imageUrl;
       }
       // Activating a highlight deactivates any other one on the same date.
       if (isActive) {
@@ -66,6 +70,7 @@ export async function saveHighlight(
       }
       if (id) await tx.update(highlights).set(values).where(eq(highlights.id, id));
       else await tx.insert(highlights).values(values);
+      return true;
     });
   } catch (error) {
     await deleteBlobs(upload.url);
@@ -73,6 +78,10 @@ export async function saveHighlight(
       unique: "วันนี้มี Highlight ที่เปิดใช้งานอยู่แล้ว กรุณาลองใหม่อีกครั้ง",
       foreignKey: "ไม่พบการแข่งขันที่เลือก",
     });
+  }
+  if (!found) {
+    await deleteBlobs(upload.url);
+    return missing("Highlight");
   }
   if (upload.url || removeImage) await deleteBlobs(previousImage);
   await audit(actor, id ? "highlight.update" : "highlight.create", `${date} ${title}`);

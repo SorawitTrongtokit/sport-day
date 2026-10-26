@@ -6,7 +6,7 @@ import { practiceSessions } from "@/db/schema";
 import type { ActionState } from "@/lib/action-state";
 import { TAGS } from "@/lib/queries/cache";
 import { idSchema, practiceSchema } from "@/lib/validations";
-import { adminActor, audit, failure, invalid, invalidate, UNAUTHORIZED } from "./helpers";
+import { adminActor, audit, failure, invalid, invalidate, missing, UNAUTHORIZED } from "./helpers";
 
 export async function savePractice(
   _prev: ActionState,
@@ -28,8 +28,14 @@ export async function savePractice(
   };
 
   try {
-    if (id) await db.update(practiceSessions).set(values).where(eq(practiceSessions.id, id));
-    else await db.insert(practiceSessions).values(values);
+    if (id) {
+      const updated = await db
+        .update(practiceSessions)
+        .set(values)
+        .where(eq(practiceSessions.id, id))
+        .returning({ id: practiceSessions.id });
+      if (updated.length === 0) return missing("ตารางซ้อม");
+    } else await db.insert(practiceSessions).values(values);
   } catch (error) {
     return failure(error, { foreignKey: "ไม่พบกีฬาหรือสีที่เลือก กรุณาโหลดหน้าใหม่" });
   }
