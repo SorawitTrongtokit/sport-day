@@ -23,6 +23,8 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL(siteUrl()),
     title: { default: title, template: `%s · ${title}` },
     description: DESCRIPTION,
+    // The logo uploaded in Settings, or the team-color tile when there is none.
+    icons: { icon: config.schoolLogoUrl ?? "/icon" },
     openGraph: {
       title,
       description: DESCRIPTION,
