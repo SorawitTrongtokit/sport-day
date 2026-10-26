@@ -1,4 +1,4 @@
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Copy, Pencil, Plus, Trash2 } from "lucide-react";
 import { DeleteDialog, FormDialog } from "@/components/admin/action-form";
 import { AdminPageHeader, EmptyRow, Panel } from "@/components/admin/admin-page";
 import { PracticeForm } from "@/components/admin/practice-form";
@@ -96,6 +96,25 @@ export default async function AdminPracticePage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex justify-end gap-2">
+                          <FormDialog
+                            action={savePractice}
+                            title="คัดลอกตารางซ้อม"
+                            description="สร้างตารางซ้อมใหม่จากรายการนี้ เช่น เปลี่ยนแค่สี แล้วกดบันทึก"
+                            trigger={<Button variant="outline" size="sm" />}
+                            triggerLabel={
+                              <>
+                                <Copy aria-hidden />
+                                คัดลอก
+                              </>
+                            }
+                          >
+                            <PracticeForm
+                              practice={session}
+                              copy
+                              sports={sports}
+                              teams={teams}
+                            />
+                          </FormDialog>
                           <FormDialog
                             action={savePractice}
                             title="แก้ไขตารางซ้อม"

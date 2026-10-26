@@ -11,24 +11,28 @@ import { SelectField, TextField } from "./fields";
 
 export function MatchForm({
   match,
+  copy = false,
   sports,
   teams,
   defaultDate,
 }: {
   match?: MatchView;
+  /** Pre-fills a new match from `match` instead of editing it. */
+  copy?: boolean;
   sports: Sport[];
   teams: TeamRef[];
   defaultDate: string;
 }) {
   const [format, setFormat] = useState<MatchFormat>(match?.format ?? "versus");
   // Once a result exists the participants are fixed; the server enforces this too.
-  const locked = (match?.lines.length ?? 0) > 0;
+  // A copy is a new match with no result, so nothing is locked.
+  const locked = !copy && (match?.lines.length ?? 0) > 0;
   // Keep a disabled sport selectable when editing a match that already uses it.
   const sportOptions = sports.filter((s) => s.isActive || s.id === match?.sport.id);
 
   return (
     <>
-      {match && <input type="hidden" name="id" value={match.id} />}
+      {match && !copy && <input type="hidden" name="id" value={match.id} />}
       <SelectField name="sportId" label="กีฬา" defaultValue={match?.sport.id ?? ""}>
         <option value="" disabled>
           เลือกกีฬา
@@ -112,7 +116,8 @@ export function MatchForm({
           <SelectField
             name="status"
             label="สถานะ"
-            defaultValue={match?.status ?? "scheduled"}
+            // A copied match starts over, even when the original was completed or cancelled.
+            defaultValue={copy ? "scheduled" : (match?.status ?? "scheduled")}
             hint="สถานะ “เสร็จสิ้น” จะถูกตั้งให้อัตโนมัติเมื่อบันทึกผลการแข่งขัน"
           >
             {EDITABLE_MATCH_STATUSES.map((status) => (

@@ -7,16 +7,19 @@ import { SelectField, TextField } from "./fields";
 
 export function PracticeForm({
   practice,
+  copy = false,
   sports,
   teams,
 }: {
   practice?: PracticeView;
+  /** Pre-fills a new session from `practice` instead of editing it. */
+  copy?: boolean;
   sports: Sport[];
   teams: Team[];
 }) {
   return (
     <>
-      {practice && <input type="hidden" name="id" value={practice.id} />}
+      {practice && !copy && <input type="hidden" name="id" value={practice.id} />}
       <div className="grid gap-4 sm:grid-cols-2">
         <SelectField
           name="sportId"
