@@ -1,7 +1,7 @@
 import { CalendarDays, Megaphone, Star, Trophy } from "lucide-react";
 import { AnnouncementList } from "@/components/home/announcements";
 import { Banner } from "@/components/home/banner";
-import { GalleryLink } from "@/components/home/gallery-cta";
+import { GalleryPreview } from "@/components/home/gallery-cta";
 import { Hero } from "@/components/home/hero";
 import { HighlightCard } from "@/components/home/highlight";
 import { LatestResults } from "@/components/home/latest-results";
@@ -14,6 +14,7 @@ import { SectionHeading } from "@/components/shared/section-heading";
 import { todayInBangkok } from "@/lib/date";
 import { getPublishedAnnouncements } from "@/lib/queries/announcements";
 import { getSiteConfig } from "@/lib/queries/config";
+import { getGallery } from "@/lib/queries/gallery";
 import { getActiveHighlight } from "@/lib/queries/highlights";
 import { getLatestResults, getMatch, getMatchesByDate } from "@/lib/queries/matches";
 import { getStandings } from "@/lib/queries/standings";
@@ -27,12 +28,13 @@ export default async function HomePage() {
   const show = config.visibility;
   const needsTodayMatches = show.liveMatches || show.todayOverview || show.todayMatches;
   // Sections that are switched off don't query the database at all.
-  const [standings, todayMatches, latestResults, highlight, announcements] = await Promise.all([
+  const [standings, todayMatches, latestResults, highlight, announcements, gallery] = await Promise.all([
     getStandings(),
     needsTodayMatches ? getMatchesByDate(today) : [],
     show.latestResults ? getLatestResults(8) : [],
     show.highlight ? getActiveHighlight(today) : null,
     show.announcements ? getPublishedAnnouncements(5) : [],
+    show.gallerySection ? getGallery(config.galleryDriveUrl) : null,
   ]);
   const liveMatches = todayMatches.filter((match) => match.status === "in_progress");
   const highlightMatch = highlight?.matchId ? await getMatch(highlight.matchId) : null;
@@ -140,7 +142,7 @@ export default async function HomePage() {
         {show.gallerySection && (
         <Reveal>
         <section aria-label="Gallery">
-          <GalleryLink url={config.galleryDriveUrl} />
+          {gallery && <GalleryPreview gallery={gallery} pageVisible={show.galleryPage} />}
         </section>
         </Reveal>
         )}
