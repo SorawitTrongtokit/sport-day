@@ -105,7 +105,8 @@ export const highlightSchema = z.object({
 export const announcementSchema = z.object({
   id: optionalId,
   title: requiredText("หัวข้อประกาศ", 160),
-  content: requiredText("เนื้อหา", 4000),
+  // May be left empty when the announcement carries an attachment instead.
+  content: optionalText(4000),
   publishedAt: dateString,
   isPublished: checkbox,
 });

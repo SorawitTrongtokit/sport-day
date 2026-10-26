@@ -1,7 +1,7 @@
 "use client";
 
 import type { Announcement } from "@/lib/queries/announcements";
-import { CheckboxField, TextareaField, TextField } from "./fields";
+import { CheckboxField, FileField, TextareaField, TextField } from "./fields";
 
 export function AnnouncementForm({
   announcement,
@@ -17,8 +17,19 @@ export function AnnouncementForm({
       <TextareaField
         name="content"
         label="เนื้อหา"
+        hint="เว้นว่างได้ถ้ามีไฟล์แนบ"
         rows={6}
         defaultValue={announcement?.content}
+      />
+      <FileField
+        name="attachment"
+        label="ไฟล์แนบ (ไม่บังคับ)"
+        hint="รูป PNG, JPG, WebP หรือ PDF ขนาดไม่เกิน 4 MB เลือกไฟล์ใหม่จะแทนที่ไฟล์เดิม"
+        accept="image/png,image/jpeg,image/webp,application/pdf"
+        removeName="removeAttachment"
+        removeLabel="ลบไฟล์แนบปัจจุบัน"
+        currentUrl={announcement?.attachmentUrl ?? null}
+        currentLabel={announcement?.attachmentName ?? undefined}
       />
       <TextField
         name="publishedAt"

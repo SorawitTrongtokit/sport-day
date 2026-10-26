@@ -14,7 +14,7 @@ import {
   invalid,
   invalidate,
   UNAUTHORIZED,
-  uploadImage,
+  uploadFile,
 } from "./helpers";
 
 // Teams are fixed at four (seeded), so there is no create or delete action.
@@ -28,7 +28,7 @@ export async function updateTeam(
   if (!parsed.success) return invalid(parsed.error);
   const { id, name, slogan, description } = parsed.data;
 
-  const upload = await uploadImage(formData.get("logo"), "teams");
+  const upload = await uploadFile(formData.get("logo"), "teams");
   if (!upload.ok) return { ok: false, fieldErrors: { logo: [upload.message] } };
 
   const removeLogo = formData.get("removeLogo") === "on" && !upload.url;

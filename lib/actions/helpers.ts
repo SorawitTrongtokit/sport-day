@@ -4,7 +4,7 @@ import { updateTag } from "next/cache";
 import type { ZodError } from "zod";
 import { db } from "@/db";
 import { auditLog } from "@/db/schema";
-import { detectImageType } from "@/lib/image-type";
+import { detectUploadType, type UploadType } from "@/lib/image-type";
 import type { ActionState } from "@/lib/action-state";
 import type { CacheTag } from "@/lib/queries/cache";
 import { getAdminSession } from "@/lib/require-admin";
@@ -63,46 +63,72 @@ export function failure(
   return { ok: false, message: "ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง" };
 }
 
-const IMAGE_TYPES: Record<string, string> = {
+const MB = 1024 * 1024;
+const EXTENSIONS: Record<UploadType, string> = {
   "image/png": "png",
   "image/jpeg": "jpg",
   "image/webp": "webp",
+  "application/pdf": "pdf",
 };
-const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+
+/** What one kind of upload field accepts, and the words its error messages use. */
+export type UploadKind = { types: UploadType[]; maxBytes: number; noun: string; typesLabel: string };
+
+export const IMAGE_UPLOAD: UploadKind = {
+  types: ["image/png", "image/jpeg", "image/webp"],
+  maxBytes: 2 * MB,
+  noun: "ไฟล์รูป",
+  typesLabel: "PNG, JPG หรือ WebP",
+};
+
+// Vercel Functions reject request bodies over 4.5 MB, so attachments stay under that.
+export const ATTACHMENT_UPLOAD: UploadKind = {
+  types: ["image/png", "image/jpeg", "image/webp", "application/pdf"],
+  maxBytes: 4 * MB,
+  noun: "ไฟล์แนบ",
+  typesLabel: "PNG, JPG, WebP หรือ PDF",
+};
 
 export type UploadResult =
-  | { ok: true; url: string | null }
+  | { ok: true; url: string; type: UploadType; name: string }
+  | { ok: true; url: null; type: null; name: null }
   | { ok: false; message: string };
 
-/** Uploads an optional image field to Vercel Blob. `url` is null when no file was chosen. */
-export async function uploadImage(
+/** Uploads an optional file field to Vercel Blob. `url` is null when no file was chosen. */
+export async function uploadFile(
   value: FormDataEntryValue | null,
   folder: string,
+  kind: UploadKind = IMAGE_UPLOAD,
 ): Promise<UploadResult> {
-  if (!(value instanceof File) || value.size === 0) return { ok: true, url: null };
-  if (value.size > MAX_IMAGE_BYTES) {
-    return { ok: false, message: "ไฟล์รูปต้องมีขนาดไม่เกิน 2 MB" };
+  if (!(value instanceof File) || value.size === 0) {
+    return { ok: true, url: null, type: null, name: null };
+  }
+  if (value.size > kind.maxBytes) {
+    return { ok: false, message: `${kind.noun}ต้องมีขนาดไม่เกิน ${kind.maxBytes / MB} MB` };
   }
   // The browser-supplied MIME type is only a hint; trust the file's own signature.
-  const type = detectImageType(new Uint8Array(await value.slice(0, 12).arrayBuffer()));
-  const extension = type && IMAGE_TYPES[type];
-  if (!type || !extension) return { ok: false, message: "รองรับเฉพาะไฟล์ PNG, JPG หรือ WebP" };
+  const type = detectUploadType(new Uint8Array(await value.slice(0, 12).arrayBuffer()));
+  if (!type || !kind.types.includes(type)) {
+    return { ok: false, message: `รองรับเฉพาะไฟล์ ${kind.typesLabel}` };
+  }
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     return {
       ok: false,
-      message: "ยังไม่ได้ตั้งค่าที่เก็บรูปภาพ (BLOB_READ_WRITE_TOKEN)",
+      message: "ยังไม่ได้ตั้งค่าที่เก็บไฟล์ (BLOB_READ_WRITE_TOKEN)",
     };
   }
+  const extension = EXTENSIONS[type];
+  const baseName = type === "application/pdf" ? "document" : "image";
   try {
-    const blob = await put(`${folder}/image.${extension}`, value, {
+    const blob = await put(`${folder}/${baseName}.${extension}`, value, {
       access: "public",
       addRandomSuffix: true,
       contentType: type,
     });
-    return { ok: true, url: blob.url };
+    return { ok: true, url: blob.url, type, name: value.name.slice(0, 255) || `${baseName}.${extension}` };
   } catch (error) {
     console.error(error);
-    return { ok: false, message: "อัปโหลดรูปไม่สำเร็จ กรุณาลองใหม่อีกครั้ง" };
+    return { ok: false, message: `อัปโหลด${kind.noun}ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง` };
   }
 }
 

@@ -14,7 +14,7 @@ import {
   invalid,
   invalidate,
   UNAUTHORIZED,
-  uploadImage,
+  uploadFile,
 } from "./helpers";
 
 export async function saveSettings(
@@ -27,7 +27,7 @@ export async function saveSettings(
   if (!parsed.success) return invalid(parsed.error);
   const { eventName, eventYear, slogan, galleryDriveUrl, rankPoints } = parsed.data;
 
-  const upload = await uploadImage(formData.get("schoolLogo"), "site");
+  const upload = await uploadFile(formData.get("schoolLogo"), "site");
   if (!upload.ok) return { ok: false, fieldErrors: { schoolLogo: [upload.message] } };
 
   const removeLogo = formData.get("removeSchoolLogo") === "on" && !upload.url;

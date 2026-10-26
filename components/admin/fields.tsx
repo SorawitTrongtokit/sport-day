@@ -143,6 +143,48 @@ export function CheckboxField({
   );
 }
 
+/**
+ * Optional file upload. When a file is already stored it links to it (if `currentLabel`
+ * is given) and offers a checkbox to remove it.
+ */
+export function FileField({
+  name,
+  label,
+  hint,
+  accept,
+  removeName,
+  removeLabel,
+  currentUrl,
+  currentLabel,
+}: {
+  name: string;
+  label: string;
+  hint: string;
+  accept: string;
+  removeName: string;
+  removeLabel: string;
+  currentUrl: string | null;
+  currentLabel?: string;
+}) {
+  const field = useField(name);
+  return (
+    <FieldShell id={field.id} label={label} hint={hint} errors={field.errors}>
+      <Input type="file" accept={accept} className="h-10 pt-2" {...field.control} />
+      {currentUrl && currentLabel && (
+        <a
+          href={currentUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="truncate text-sm underline"
+        >
+          ไฟล์ปัจจุบัน: {currentLabel}
+        </a>
+      )}
+      {currentUrl && <CheckboxField name={removeName} label={removeLabel} />}
+    </FieldShell>
+  );
+}
+
 /** Optional image upload, with a "remove current image" checkbox when one exists. */
 export function ImageField({
   name,
@@ -155,23 +197,15 @@ export function ImageField({
   removeName: string;
   currentUrl: string | null;
 }) {
-  const field = useField(name);
   return (
-    <FieldShell
-      id={field.id}
+    <FileField
+      name={name}
       label={label}
       hint="PNG, JPG หรือ WebP ขนาดไม่เกิน 2 MB"
-      errors={field.errors}
-    >
-      <Input
-        type="file"
-        accept="image/png,image/jpeg,image/webp"
-        className="h-10 pt-2"
-        {...field.control}
-      />
-      {currentUrl && (
-        <CheckboxField name={removeName} label="ลบรูปปัจจุบัน" />
-      )}
-    </FieldShell>
+      accept="image/png,image/jpeg,image/webp"
+      removeName={removeName}
+      removeLabel="ลบรูปปัจจุบัน"
+      currentUrl={currentUrl}
+    />
   );
 }

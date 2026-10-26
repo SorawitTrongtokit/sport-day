@@ -14,7 +14,7 @@ import {
   invalid,
   invalidate,
   UNAUTHORIZED,
-  uploadImage,
+  uploadFile,
 } from "./helpers";
 
 export async function saveHighlight(
@@ -27,7 +27,7 @@ export async function saveHighlight(
   if (!parsed.success) return invalid(parsed.error);
   const { id, date, title, description, matchId, isActive } = parsed.data;
 
-  const upload = await uploadImage(formData.get("image"), "highlights");
+  const upload = await uploadFile(formData.get("image"), "highlights");
   if (!upload.ok) return { ok: false, fieldErrors: { image: [upload.message] } };
 
   const removeImage = formData.get("removeImage") === "on" && !upload.url;

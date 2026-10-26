@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { formatDisplayDate, formatThaiDate, isValidDateString, todayInBangkok } from "@/lib/date";
-import { detectImageType } from "@/lib/image-type";
+import { detectImageType, detectUploadType } from "@/lib/image-type";
 import { parsePage, parseSteps, RESULTS_MAX_STEPS } from "@/lib/pagination";
 import { parseRankPoints } from "@/lib/rank-points";
 import { rankByTotal } from "@/lib/standings";
-import { matchSchema, settingsSchema } from "@/lib/validations";
+import { announcementSchema, matchSchema, settingsSchema } from "@/lib/validations";
 import { parseResultLines } from "@/lib/validations/result";
 
 const validMatch = {
@@ -203,6 +203,34 @@ describe("detectImageType", () => {
     expect(detectImageType(new TextEncoder().encode("<svg onload=alert(1)>"))).toBeNull();
     expect(detectImageType(new TextEncoder().encode("GIF89a"))).toBeNull();
     expect(detectImageType(bytes())).toBeNull();
+  });
+});
+
+describe("detectUploadType", () => {
+  it("accepts images and PDFs by signature", () => {
+    expect(detectUploadType(new Uint8Array([0xff, 0xd8, 0xff, 0xe0]))).toBe("image/jpeg");
+    expect(detectUploadType(new TextEncoder().encode("%PDF-1.7\n"))).toBe("application/pdf");
+  });
+
+  it("rejects files that only claim to be a PDF", () => {
+    expect(detectUploadType(new TextEncoder().encode("%PDF"))).toBeNull();
+    expect(detectUploadType(new TextEncoder().encode("<html>%PDF-1.7"))).toBeNull();
+    expect(detectUploadType(new Uint8Array())).toBeNull();
+  });
+});
+
+describe("announcementSchema", () => {
+  const announcement = { title: "ประกาศ", publishedAt: "2026-10-05" };
+
+  it("allows empty content so an attachment can stand alone", () => {
+    const result = announcementSchema.safeParse({ ...announcement, content: "" });
+    expect(result.success).toBe(true);
+    expect(result.data?.content).toBeUndefined();
+  });
+
+  it("still limits content length", () => {
+    const result = announcementSchema.safeParse({ ...announcement, content: "ก".repeat(4001) });
+    expect(result.success).toBe(false);
   });
 });
 

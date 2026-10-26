@@ -9,8 +9,8 @@ const nextConfig: NextConfig = {
     ],
   },
   experimental: {
-    // Admin forms can carry one image of up to 2 MB.
-    serverActions: { bodySizeLimit: "3mb" },
+    // Admin forms carry at most one 4 MB attachment; Vercel caps bodies at 4.5 MB anyway.
+    serverActions: { bodySizeLimit: "4.5mb" },
   },
 };
 
