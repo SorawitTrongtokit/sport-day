@@ -6,7 +6,7 @@ import { sports } from "@/db/schema";
 import type { ActionState } from "@/lib/action-state";
 import { TAGS } from "@/lib/queries/cache";
 import { idSchema, sportSchema } from "@/lib/validations";
-import { adminActor, audit, failure, invalid, invalidate, UNAUTHORIZED } from "./helpers";
+import { adminActor, audit, failure, invalid, invalidate, missing, UNAUTHORIZED } from "./helpers";
 
 export async function saveSport(
   _prev: ActionState,
@@ -20,8 +20,14 @@ export async function saveSport(
   const values = { name, icon: icon ?? null, isActive };
 
   try {
-    if (id) await db.update(sports).set(values).where(eq(sports.id, id));
-    else await db.insert(sports).values(values);
+    if (id) {
+      const updated = await db
+        .update(sports)
+        .set(values)
+        .where(eq(sports.id, id))
+        .returning({ id: sports.id });
+      if (updated.length === 0) return missing("กีฬา");
+    } else await db.insert(sports).values(values);
   } catch (error) {
     return failure(error);
   }

@@ -32,6 +32,11 @@ const ACTION_LABELS: Record<string, string> = {
   "announcement.create": "เพิ่มประกาศ",
   "announcement.update": "แก้ไขประกาศ",
   "announcement.delete": "ลบประกาศ",
+  "practice.create": "เพิ่มตารางซ้อม",
+  "practice.update": "แก้ไขตารางซ้อม",
+  "practice.delete": "ลบตารางซ้อม",
+  "display.toggle": "เปิด/ปิดการแสดงผล",
+  "display.banner": "เปลี่ยนรูปปก",
   "settings.update": "แก้ไขการตั้งค่า",
 };
 

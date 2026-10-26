@@ -14,6 +14,7 @@ import {
   failure,
   invalid,
   invalidate,
+  missing,
   UNAUTHORIZED,
   uploadFile,
 } from "./helpers";
@@ -72,7 +73,7 @@ export async function saveAnnouncement(
   if (outcome !== "saved") {
     await deleteBlobs(upload.url);
     return outcome === "missing"
-      ? { ok: false, message: "ไม่พบประกาศนี้ อาจถูกลบไปแล้ว" }
+      ? missing("ประกาศ")
       : { ok: false, fieldErrors: { content: ["กรุณากรอกเนื้อหาหรือแนบไฟล์อย่างใดอย่างหนึ่ง"] } };
   }
   if (upload.url || removeAttachment) await deleteBlobs(previousAttachment);

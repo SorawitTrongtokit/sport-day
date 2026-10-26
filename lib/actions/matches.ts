@@ -6,7 +6,7 @@ import { matches, results } from "@/db/schema";
 import type { ActionState } from "@/lib/action-state";
 import { TAGS } from "@/lib/queries/cache";
 import { idSchema, matchSchema } from "@/lib/validations";
-import { adminActor, audit, failure, invalid, invalidate, UNAUTHORIZED } from "./helpers";
+import { adminActor, audit, failure, invalid, invalidate, missing, UNAUTHORIZED } from "./helpers";
 
 export async function saveMatch(
   _prev: ActionState,
@@ -31,17 +31,29 @@ export async function saveMatch(
     if (!id) {
       await db.insert(matches).values({ ...schedule, ...participants });
     } else {
-      const [hasResult] = await db
-        .select({ id: results.id })
-        .from(results)
-        .where(eq(results.matchId, id))
-        .limit(1);
-      // Once a result exists, teams/format/status are locked so the stored
-      // result can never disagree with the match. Delete the result to change them.
-      await db
-        .update(matches)
-        .set(hasResult ? schedule : { ...schedule, ...participants })
-        .where(eq(matches.id, id));
+      const found = await db.transaction(async (tx) => {
+        // Locks the match so saveResult (which takes the same lock) can't
+        // record a result for the old teams while they are being changed.
+        const [match] = await tx
+          .select({ id: matches.id })
+          .from(matches)
+          .where(eq(matches.id, id))
+          .for("update");
+        if (!match) return false;
+        const [hasResult] = await tx
+          .select({ id: results.id })
+          .from(results)
+          .where(eq(results.matchId, id))
+          .limit(1);
+        // Once a result exists, teams/format/status are locked so the stored
+        // result can never disagree with the match. Delete the result to change them.
+        await tx
+          .update(matches)
+          .set(hasResult ? schedule : { ...schedule, ...participants })
+          .where(eq(matches.id, id));
+        return true;
+      });
+      if (!found) return missing("การแข่งขัน");
     }
   } catch (error) {
     return failure(error, { foreignKey: "กีฬาหรือทีมที่เลือกไม่มีอยู่ในระบบ" });

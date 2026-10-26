@@ -29,45 +29,47 @@ export async function saveResult(
   const isEdit = raw.mode === "edit";
 
   try {
-    const [match] = await db
-      .select({
-        format: matches.format,
-        status: matches.status,
-        teamAId: matches.teamAId,
-        teamBId: matches.teamBId,
-      })
-      .from(matches)
-      .where(eq(matches.id, matchId));
-    if (!match) return { ok: false, message: "ไม่พบการแข่งขัน" };
-    if (match.status === "cancelled" || match.status === "postponed") {
-      return { ok: false, message: "การแข่งขันที่เลื่อนหรือยกเลิกไม่สามารถบันทึกผลได้" };
-    }
+    const outcome = await db.transaction(async (tx): Promise<ActionState | null> => {
+      // Locks the match so its teams can't change (see saveMatch) until this result is in.
+      const [match] = await tx
+        .select({
+          format: matches.format,
+          status: matches.status,
+          teamAId: matches.teamAId,
+          teamBId: matches.teamBId,
+        })
+        .from(matches)
+        .where(eq(matches.id, matchId))
+        .for("update");
+      if (!match) return { ok: false, message: "ไม่พบการแข่งขัน" };
+      if (match.status === "cancelled" || match.status === "postponed") {
+        return { ok: false, message: "การแข่งขันที่เลื่อนหรือยกเลิกไม่สามารถบันทึกผลได้" };
+      }
 
-    // Participants come from the database, never from the submitted form.
-    const teamIds =
-      match.format === "versus"
-        ? [match.teamAId!, match.teamBId!]
-        : (await db.select({ id: teams.id }).from(teams).orderBy(asc(teams.id))).map(
-            (team) => team.id,
-          );
+      // Participants come from the database, never from the submitted form.
+      const teamIds =
+        match.format === "versus"
+          ? [match.teamAId!, match.teamBId!]
+          : (await tx.select({ id: teams.id }).from(teams).orderBy(asc(teams.id))).map(
+              (team) => team.id,
+            );
 
-    const parsed = parseResultLines(match.format, teamIds, raw);
-    if (!parsed.ok) {
-      return {
-        ok: false,
-        message: "กรุณาตรวจสอบข้อมูลที่กรอก",
-        fieldErrors: parsed.fieldErrors,
-      };
-    }
+      const parsed = parseResultLines(match.format, teamIds, raw);
+      if (!parsed.ok) {
+        return {
+          ok: false,
+          message: "กรุณาตรวจสอบข้อมูลที่กรอก",
+          fieldErrors: parsed.fieldErrors,
+        };
+      }
 
-    const duplicate = await db.transaction(async (tx) => {
       const existing = await tx
         .select({ id: results.id })
         .from(results)
         .where(eq(results.matchId, matchId))
         .limit(1);
       if (existing.length > 0) {
-        if (!isEdit) return true;
+        if (!isEdit) return { ok: false, message: DUPLICATE };
         await tx.delete(results).where(eq(results.matchId, matchId));
         await tx.delete(scorePoints).where(eq(scorePoints.matchId, matchId));
       }
@@ -87,9 +89,9 @@ export async function saveResult(
         })),
       );
       await tx.update(matches).set({ status: "completed" }).where(eq(matches.id, matchId));
-      return false;
+      return null;
     });
-    if (duplicate) return { ok: false, message: DUPLICATE };
+    if (outcome) return outcome;
   } catch (error) {
     // The unique index catches two admins submitting at the same moment.
     return failure(error, { unique: DUPLICATE });
@@ -113,6 +115,12 @@ export async function deleteResult(
 
   try {
     const deleted = await db.transaction(async (tx) => {
+      // Same lock order as saveResult (match first), so the two can't deadlock.
+      await tx
+        .select({ id: matches.id })
+        .from(matches)
+        .where(eq(matches.id, matchId))
+        .for("update");
       const removed = await tx
         .delete(results)
         .where(eq(results.matchId, matchId))
