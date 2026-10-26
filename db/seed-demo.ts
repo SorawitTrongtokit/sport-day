@@ -1,6 +1,7 @@
 // DEMO DATA ONLY — for local development and previews.
 // Never run this against the production database.
-import { config } from "dotenv";
+import { existsSync, readFileSync } from "node:fs";
+import { config, parse } from "dotenv";
 config({ path: ".env.local" });
 
 function bangkokDate(offsetDays: number) {
@@ -12,9 +13,15 @@ async function main() {
   if (process.env.NODE_ENV === "production") {
     throw new Error("Refusing to seed demo data in production.");
   }
-  // Only the local Docker database (npm run db:up) may receive demo data.
-  const host = process.env.DATABASE_URL ? new URL(process.env.DATABASE_URL).hostname : "";
-  if (!["localhost", "127.0.0.1", "[::1]"].includes(host)) {
+  // Only the local Docker database (npm run db:up) may receive demo data, or the
+  // preview database when asked with --preview (npm run db:seed-demo:preview).
+  const url = process.env.DATABASE_URL ?? "";
+  const host = url ? new URL(url).hostname : "";
+  const isLocal = ["localhost", "127.0.0.1", "[::1]"].includes(host);
+  const productionUrl = existsSync(".env.prod")
+    ? parse(readFileSync(".env.prod")).DATABASE_URL
+    : undefined;
+  if (!url || url === productionUrl || (!isLocal && !process.argv.includes("--preview"))) {
     throw new Error(`Refusing to seed demo data into "${host || "no database"}": use a local database.`);
   }
   const { db, pool } = await import("./index");
