@@ -86,7 +86,7 @@ export const ATTACHMENT_UPLOAD: UploadKind = {
   types: ["image/png", "image/jpeg", "image/webp", "application/pdf"],
   maxBytes: 4 * MB,
   noun: "ไฟล์แนบ",
-  typesLabel: "รูป PNG, JPG, WebP หรือ PDF",
+  typesLabel: "PNG, JPG, WebP หรือ PDF",
 };
 
 export type UploadResult =
