@@ -1,16 +1,23 @@
 import "server-only";
-import { desc, eq } from "drizzle-orm";
+import { asc, desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { announcements } from "@/db/schema";
 import { cached, TAGS } from "./cache";
 
 export type Announcement = typeof announcements.$inferSelect;
 
+// PostgreSQL sorts nulls last when ordering ascending.
+const announcementOrder = [
+  asc(announcements.displayOrder),
+  desc(announcements.publishedAt),
+  desc(announcements.id),
+];
+
 export async function fetchAnnouncements(): Promise<Announcement[]> {
   return db
     .select()
     .from(announcements)
-    .orderBy(desc(announcements.publishedAt), desc(announcements.id));
+    .orderBy(...announcementOrder);
 }
 
 async function fetchPublishedAnnouncements(limit: number): Promise<Announcement[]> {
@@ -18,7 +25,7 @@ async function fetchPublishedAnnouncements(limit: number): Promise<Announcement[
     .select()
     .from(announcements)
     .where(eq(announcements.isPublished, true))
-    .orderBy(desc(announcements.publishedAt), desc(announcements.id))
+    .orderBy(...announcementOrder)
     .limit(limit);
 }
 
