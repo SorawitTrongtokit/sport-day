@@ -1,6 +1,7 @@
 import { Copy, Pencil, Plus, Trash2 } from "lucide-react";
 import { DeleteDialog, FormDialog } from "@/components/admin/action-form";
 import { AdminPageHeader, EmptyRow, Pager, Panel } from "@/components/admin/admin-page";
+import { CsvExportLink } from "@/components/admin/csv-export-link";
 import { MatchForm } from "@/components/admin/match-form";
 import { MatchWhat, MatchWhen, MatchWho } from "@/components/admin/match-summary";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -44,21 +45,24 @@ export default async function AdminMatchesPage({
         title="Matches"
         description="สร้างและแก้ไขตารางการแข่งขัน"
         action={
-          hasActiveSport && (
-            <FormDialog
-              action={saveMatch}
-              title="สร้างการแข่งขัน"
-              trigger={<Button size="lg" />}
-              triggerLabel={
-                <>
-                  <Plus aria-hidden />
-                  สร้างการแข่งขัน
-                </>
-              }
-            >
-              <MatchForm sports={sports} teams={teams} defaultDate={today} />
-            </FormDialog>
-          )
+          <div className="flex flex-wrap gap-2">
+            <CsvExportLink kind="schedule" />
+            {hasActiveSport && (
+              <FormDialog
+                action={saveMatch}
+                title="สร้างการแข่งขัน"
+                trigger={<Button size="lg" />}
+                triggerLabel={
+                  <>
+                    <Plus aria-hidden />
+                    สร้างการแข่งขัน
+                  </>
+                }
+              >
+                <MatchForm sports={sports} teams={teams} defaultDate={today} />
+              </FormDialog>
+            )}
+          </div>
         }
       />
       <Panel>
