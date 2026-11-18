@@ -78,19 +78,22 @@ export function MatchTeams({
   const scoreB = match.lines.find((l) => l.team.id === teamB.id)?.score ?? null;
   const scored = scoreA !== null && scoreB !== null;
   const nameClass =
-    size === "lg" ? "text-base font-semibold sm:text-lg" : "text-sm font-medium";
+    size === "lg"
+      ? "gap-1.5 text-sm font-semibold leading-tight sm:gap-2 sm:text-lg"
+      : "text-sm font-medium";
 
   return (
-    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+    <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5 sm:gap-3">
       <TeamBadge
         team={teamA}
+        wrap
         className={cn(nameClass, scored && scoreA < scoreB && "text-muted-foreground")}
       />
       {scored ? (
         <p
           className={cn(
-            "font-bold tabular-nums",
-            size === "lg" ? "text-3xl sm:text-4xl" : "text-lg",
+            "font-bold whitespace-nowrap tabular-nums",
+            size === "lg" ? "text-2xl sm:text-4xl" : "text-lg",
           )}
         >
           <span className="sr-only">
@@ -108,9 +111,10 @@ export function MatchTeams({
       <TeamBadge
         team={teamB}
         reverse
+        wrap
         className={cn(
           nameClass,
-          "justify-self-end",
+          "max-w-full justify-self-end text-right",
           scored && scoreB < scoreA && "text-muted-foreground",
         )}
       />

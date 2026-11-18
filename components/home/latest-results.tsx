@@ -95,17 +95,16 @@ export function LatestResults({ matches }: { matches: MatchView[] }) {
             ))}
           </div>
           <div className="flex gap-2">
-            {!reduceMotion && (
-              <Button
-                variant="outline"
-                size="icon-lg"
-                aria-label={stopped ? "เล่นสไลด์อัตโนมัติ" : "หยุดสไลด์อัตโนมัติ"}
-                aria-pressed={stopped}
-                onClick={() => setStopped((value) => !value)}
-              >
-                {stopped ? <Play /> : <Pause />}
-              </Button>
-            )}
+            <Button
+              variant="outline"
+              size="icon-lg"
+              className="motion-reduce:hidden"
+              aria-label={stopped ? "เล่นสไลด์อัตโนมัติ" : "หยุดสไลด์อัตโนมัติ"}
+              aria-pressed={stopped}
+              onClick={() => setStopped((value) => !value)}
+            >
+              {stopped ? <Play /> : <Pause />}
+            </Button>
             <Button
               variant="outline"
               size="icon-lg"
