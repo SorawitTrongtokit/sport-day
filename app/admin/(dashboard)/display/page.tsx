@@ -12,7 +12,7 @@ export default async function AdminDisplayPage() {
     <>
       <AdminPageHeader
         title="หน้าเว็บ"
-        description="เปลี่ยนรูปปก และเลือกว่าจะเปิดหรือปิดส่วนไหนของหน้าเว็บ"
+        description="เปลี่ยนรูปปก เปิด–ปิดการแสดงผล และจัดลำดับส่วนต่าง ๆ บนหน้าแรก"
       />
       <div className="grid max-w-2xl gap-6">
         <Panel title="รูปปก" className="pb-4">
@@ -21,7 +21,7 @@ export default async function AdminDisplayPage() {
           </div>
         </Panel>
         <Panel title="การแสดงผล">
-          <VisibilitySwitches visibility={config.visibility} />
+          <VisibilitySwitches visibility={config.visibility} homeSectionOrder={config.homeSectionOrder} />
         </Panel>
       </div>
     </>

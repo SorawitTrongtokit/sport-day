@@ -5,8 +5,11 @@ import { db } from "@/db";
 import { siteConfig } from "@/db/schema";
 import { parseRankPoints } from "@/lib/rank-points";
 import {
+  DEFAULT_HOME_SECTION_ORDER,
   DEFAULT_VISIBILITY,
+  parseHomeSectionOrder,
   parseVisibility,
+  type HomeSectionKey,
   type SectionKey,
   type Visibility,
 } from "@/lib/visibility";
@@ -23,6 +26,7 @@ export type SiteConfig = {
   /** Uploaded cover image or video; null means the bundled /banner.webp. */
   bannerUrl: string | null;
   visibility: Visibility;
+  homeSectionOrder: HomeSectionKey[];
 };
 
 const FALLBACK: SiteConfig = {
@@ -34,6 +38,7 @@ const FALLBACK: SiteConfig = {
   rankPoints: [],
   bannerUrl: null,
   visibility: DEFAULT_VISIBILITY,
+  homeSectionOrder: DEFAULT_HOME_SECTION_ORDER,
 };
 
 export async function fetchSiteConfig(): Promise<SiteConfig> {
@@ -48,10 +53,11 @@ export async function fetchSiteConfig(): Promise<SiteConfig> {
     rankPoints: parseRankPoints(row.rankPoints),
     bannerUrl: row.bannerUrl,
     visibility: parseVisibility(row.visibility),
+    homeSectionOrder: parseHomeSectionOrder(row.visibility),
   };
 }
 
-export const getSiteConfig = cached(fetchSiteConfig, "site-config", [TAGS.config]);
+export const getSiteConfig = cached(fetchSiteConfig, "site-config-with-home-order", [TAGS.config]);
 
 /** For layouts and metadata, which must still render when the database is unreachable. */
 export async function getSiteConfigSafe(): Promise<SiteConfig> {
