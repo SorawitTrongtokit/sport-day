@@ -7,10 +7,12 @@ export function TeamBadge({
   team,
   className,
   reverse = false,
+  wrap = false,
 }: {
   team: Pick<TeamRef, "name" | "color">;
   className?: string;
   reverse?: boolean;
+  wrap?: boolean;
 }) {
   return (
     <span
@@ -25,7 +27,7 @@ export function TeamBadge({
         className="size-2.5 shrink-0 rounded-full"
         style={{ backgroundColor: team.color }}
       />
-      <span className="truncate">{team.name}</span>
+      <span className={wrap ? "min-w-0 wrap-anywhere" : "truncate"}>{team.name}</span>
     </span>
   );
 }
