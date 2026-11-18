@@ -9,6 +9,7 @@ import { parseSteps, RESULTS_MAX_STEPS, RESULTS_PAGE_SIZE } from "@/lib/paginati
 import { requirePageVisible } from "@/lib/queries/config";
 import { getCompletedMatches } from "@/lib/queries/matches";
 import { getActiveSports } from "@/lib/queries/sports";
+import { findSportGroup, groupSports } from "@/lib/sport-groups";
 
 export const metadata: Metadata = { title: "ผลการแข่งขัน" };
 export const dynamic = "force-dynamic";
@@ -21,14 +22,15 @@ export default async function ResultsPage({
   await requirePageVisible("resultsPage");
   const { sport, show } = await searchParams;
   const sports = await getActiveSports();
-  const sportId = sports.find((s) => String(s.id) === sport)?.id;
+  const sportGroups = groupSports(sports);
+  const sportGroup = findSportGroup(sportGroups, sport);
   const steps = parseSteps(show);
   const limit = steps * RESULTS_PAGE_SIZE;
-  const rows = await getCompletedMatches(sportId, limit);
+  const rows = await getCompletedMatches(sportGroup?.sportIds, limit);
   const matches = rows.slice(0, limit);
   const hasMore = rows.length > limit && steps < RESULTS_MAX_STEPS;
   const query = new URLSearchParams();
-  if (sportId) query.set("sport", String(sportId));
+  if (sportGroup) query.set("sport", sportGroup.id);
   query.set("show", String(steps + 1));
 
   return (
@@ -40,8 +42,8 @@ export default async function ResultsPage({
       />
       <div className="container-page space-y-6 py-8">
         <SportFilter
-          sports={sports}
-          selectedId={sportId}
+          sports={sportGroups}
+          selectedId={sportGroup?.id}
           hrefFor={(id) => (id ? `/results?sport=${id}` : "/results")}
         />
         {matches.length > 0 ? (

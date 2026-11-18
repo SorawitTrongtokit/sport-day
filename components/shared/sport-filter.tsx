@@ -1,17 +1,16 @@
 import Link from "next/link";
-import type { Sport } from "@/lib/queries/sports";
 import { cn } from "@/lib/utils";
 
 /** "All" + one chip per sport. Plain links, so it works without JavaScript. */
-export function SportFilter({
+export function SportFilter<Id extends string | number>({
   sports,
   selectedId,
   hrefFor,
 }: {
-  sports: Pick<Sport, "id" | "name" | "icon">[];
-  selectedId: number | undefined;
+  sports: { id: Id; name: string; icon: string | null }[];
+  selectedId: Id | undefined;
   /** Builds the link for a sport, or for "all" when called with undefined. */
-  hrefFor: (sportId: number | undefined) => string;
+  hrefFor: (sportId: Id | undefined) => string;
 }) {
   if (sports.length === 0) return null;
 

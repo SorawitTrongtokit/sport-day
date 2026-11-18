@@ -1,6 +1,7 @@
 import { ClipboardPen, Pencil, Trash2 } from "lucide-react";
 import { DeleteDialog, FormDialog } from "@/components/admin/action-form";
 import { AdminPageHeader, EmptyRow, Pager, Panel } from "@/components/admin/admin-page";
+import { CsvExportLink } from "@/components/admin/csv-export-link";
 import { MatchWhat, MatchWhen, MatchWho } from "@/components/admin/match-summary";
 import { ResultForm } from "@/components/admin/result-form";
 import { StartMatchButton } from "@/components/admin/start-match-button";
@@ -128,6 +129,7 @@ export default async function AdminResultsPage({
       <AdminPageHeader
         title="Results"
         description="บันทึกผลเมื่อการแข่งขันจบ ระบบจะตั้งสถานะเป็นเสร็จสิ้นและอัปเดตคะแนนรวมให้อัตโนมัติ"
+        action={<CsvExportLink kind="results" />}
       />
       <div className="space-y-6">
         <Panel title={`รอบันทึกผล (${pending.length})`}>

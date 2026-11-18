@@ -12,6 +12,7 @@ import { requirePageVisible } from "@/lib/queries/config";
 import { getMatchDates, getMatchesByDate } from "@/lib/queries/matches";
 import { getActiveSports } from "@/lib/queries/sports";
 import { getTeams } from "@/lib/queries/teams";
+import { findSportGroup, groupSports } from "@/lib/sport-groups";
 
 export const metadata: Metadata = { title: "ตารางการแข่งขัน" };
 export const dynamic = "force-dynamic";
@@ -43,14 +44,16 @@ export default async function SchedulePage({
     (requested === today || dates.includes(requested))
       ? requested
       : defaultDate(dates, today);
-  const sportId = sports.find((s) => String(s.id) === sport)?.id;
+  const sportGroups = groupSports(sports);
+  const sportGroup = findSportGroup(sportGroups, sport);
+  const sportGroupId = sportGroup?.id;
   const teamId = teams.find((t) => String(t.id) === team)?.id;
 
   const dayMatches = await getMatchesByDate(selected);
   // A team plays in its own matches and in every all-teams event.
   const matches = dayMatches.filter(
     (match) =>
-      (!sportId || match.sport.id === sportId) &&
+      (!sportGroup || sportGroup.sportIds.includes(match.sport.id)) &&
       (!teamId ||
         match.format === "all_teams" ||
         match.teamA?.id === teamId ||
@@ -58,10 +61,10 @@ export default async function SchedulePage({
   );
 
   // Changing the day, sport or team keeps the other two.
-  const href = (date: string, sport: number | undefined, team: number | undefined) =>
+  const href = (date: string, sport: string | undefined, team: number | undefined) =>
     `/schedule?date=${date}${sport ? `&sport=${sport}` : ""}${team ? `&team=${team}` : ""}`;
 
-  const emptyMessage = sportId || teamId
+  const emptyMessage = sportGroupId || teamId
     ? "ไม่มีการแข่งขันตามตัวกรองในวันที่เลือก"
     : selected === today
       ? "ยังไม่มีการแข่งขันในวันนี้"
@@ -80,7 +83,7 @@ export default async function SchedulePage({
             dates={dates}
             selected={selected}
             today={today}
-            hrefFor={(date) => href(date, sportId, teamId)}
+            hrefFor={(date) => href(date, sportGroupId, teamId)}
           />
         )}
         <section>
@@ -89,14 +92,14 @@ export default async function SchedulePage({
           </h2>
           <div className="mb-4 space-y-2">
             <SportFilter
-              sports={sports}
-              selectedId={sportId}
+              sports={sportGroups}
+              selectedId={sportGroupId}
               hrefFor={(id) => href(selected, id, teamId)}
             />
             <TeamFilter
               teams={teams}
               selectedId={teamId}
-              hrefFor={(id) => href(selected, sportId, id)}
+              hrefFor={(id) => href(selected, sportGroupId, id)}
             />
           </div>
           {matches.length > 0 ? (

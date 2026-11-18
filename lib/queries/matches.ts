@@ -106,7 +106,7 @@ export const fetchPendingMatches = () =>
 export const fetchMatchesOnDate = (date: string) =>
   fetchMatches(eq(matches.date, date), "schedule");
 
-export const fetchRecentResults = (limit: number) =>
+export const fetchRecentResults = (limit?: number) =>
   fetchMatches(eq(matches.status, "completed"), "latest", limit);
 
 export async function fetchMatch(id: number): Promise<MatchView | null> {
@@ -136,11 +136,11 @@ export const getMatchDates = cached(
 
 /** `limit` is a match count; one extra row is read so callers know whether more exist. */
 export const getCompletedMatches = cached(
-  (sportId: number | undefined, limit: number) =>
+  (sportIds: number[] | undefined, limit: number) =>
     fetchMatches(
       and(
         eq(matches.status, "completed"),
-        sportId ? eq(matches.sportId, sportId) : undefined,
+        sportIds ? inArray(matches.sportId, sportIds) : undefined,
       ),
       "latest",
       limit + 1,
