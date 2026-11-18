@@ -165,6 +165,7 @@ export const announcements = pgTable(
     attachmentName: text("attachment_name"),
     publishedAt: date("published_at", { mode: "string" }).notNull(),
     isPublished: boolean("is_published").notNull().default(false),
+    displayOrder: integer("display_order"),
     ...timestamps,
   },
   (t) => [index("announcements_published_at_idx").on(t.publishedAt)],

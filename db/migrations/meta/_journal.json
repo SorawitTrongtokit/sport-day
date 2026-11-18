@@ -29,6 +29,13 @@
       "when": 1792987479992,
       "tag": "0003_announcement_attachments",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794969547030,
+      "tag": "0004_announcement_display_order",
+      "breakpoints": true
     }
   ]
 }

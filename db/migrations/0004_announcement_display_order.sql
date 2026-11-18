@@ -1,0 +1,1 @@
+ALTER TABLE "announcements" ADD COLUMN "display_order" integer;

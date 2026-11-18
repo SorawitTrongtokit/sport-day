@@ -49,6 +49,7 @@ export default async function AdminAnnouncementsPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>ลำดับบนหน้าแรก</TableHead>
                 <TableHead>วันที่ประกาศ</TableHead>
                 <TableHead>หัวข้อ</TableHead>
                 <TableHead>สถานะ</TableHead>
@@ -58,6 +59,7 @@ export default async function AdminAnnouncementsPage() {
             <TableBody>
               {announcements.map((item) => (
                 <TableRow key={item.id}>
+                  <TableCell>{item.displayOrder ?? "ตามวันที่"}</TableCell>
                   <TableCell className="whitespace-nowrap">
                     {formatThaiDate(item.publishedAt)}
                   </TableCell>

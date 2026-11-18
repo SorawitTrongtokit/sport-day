@@ -109,6 +109,16 @@ export const announcementSchema = z.object({
   content: optionalText(4000),
   publishedAt: dateString,
   isPublished: checkbox,
+  displayOrder: z.preprocess(
+    (value) => (value === "" ? null : value),
+    z.coerce
+      .number({ error: "ลำดับต้องเป็นตัวเลข" })
+      .int("ลำดับต้องเป็นจำนวนเต็ม")
+      .min(1, "ลำดับต้องเริ่มที่ 1")
+      .max(2_147_483_647, "ลำดับต้องไม่เกิน 2,147,483,647")
+      .nullable()
+      .optional(),
+  ),
 });
 
 export const settingsSchema = z.object({

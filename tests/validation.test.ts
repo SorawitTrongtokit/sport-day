@@ -232,6 +232,16 @@ describe("announcementSchema", () => {
     const result = announcementSchema.safeParse({ ...announcement, content: "ก".repeat(4001) });
     expect(result.success).toBe(false);
   });
+
+  it("accepts a custom order and clears it when the field is emptied", () => {
+    expect(announcementSchema.parse({ ...announcement, displayOrder: "2" }).displayOrder).toBe(2);
+    expect(announcementSchema.parse({ ...announcement, displayOrder: "" }).displayOrder).toBeNull();
+    expect(announcementSchema.parse(announcement).displayOrder).toBeUndefined();
+  });
+
+  it.each(["0", "-1", "1.5", "2147483648", "abc"])("rejects display order %s", (displayOrder) => {
+    expect(announcementSchema.safeParse({ ...announcement, displayOrder }).success).toBe(false);
+  });
 });
 
 describe("parseSteps and parsePage", () => {

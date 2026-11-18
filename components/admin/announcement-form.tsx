@@ -37,6 +37,15 @@ export function AnnouncementForm({
         type="date"
         defaultValue={announcement?.publishedAt ?? defaultDate}
       />
+      <TextField
+        name="displayOrder"
+        label="ลำดับบนหน้าแรก"
+        type="number"
+        min={1}
+        step={1}
+        hint="เลขน้อยขึ้นก่อน เว้นว่างเพื่อแสดงต่อท้ายตามวันที่ล่าสุด"
+        defaultValue={announcement?.displayOrder ?? ""}
+      />
       <CheckboxField
         name="isPublished"
         label="เผยแพร่"
