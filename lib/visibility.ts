@@ -23,6 +23,23 @@ export const SECTIONS = [
 export type SectionKey = (typeof SECTIONS)[number]["key"];
 export type Visibility = Record<SectionKey, boolean>;
 
+export const HOME_SECTIONS = SECTIONS.filter((section) => section.group === "home");
+export const PAGE_SECTIONS = SECTIONS.filter((section) => section.group === "page");
+export type HomeSectionKey = (typeof HOME_SECTIONS)[number]["key"];
+export const DEFAULT_HOME_SECTION_ORDER = HOME_SECTIONS.map(({ key }) => key);
+export const HOME_SECTION_ORDER_KEY = "homeSectionOrder";
+
+export function parseHomeSectionOrder(stored: unknown): HomeSectionKey[] {
+  const order = stored && typeof stored === "object" && HOME_SECTION_ORDER_KEY in stored
+    ? stored[HOME_SECTION_ORDER_KEY]
+    : undefined;
+  const saved = Array.isArray(order)
+    ? order.filter((key): key is HomeSectionKey => DEFAULT_HOME_SECTION_ORDER.includes(key))
+    : [];
+  // Add any sections that were introduced after the order was saved.
+  return [...new Set([...saved, ...DEFAULT_HOME_SECTION_ORDER])];
+}
+
 export const SECTION_KEYS = SECTIONS.map((s) => s.key) as SectionKey[];
 
 // The match schedule is kept but closed for now; practice schedules replace it.

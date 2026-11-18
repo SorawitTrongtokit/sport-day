@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { bannerKind, isAllowedBannerUrl } from "@/lib/banner";
 import { practiceSchema } from "@/lib/validations";
-import { DEFAULT_VISIBILITY, hiddenPages, parseVisibility } from "@/lib/visibility";
+import {
+  DEFAULT_HOME_SECTION_ORDER,
+  DEFAULT_VISIBILITY,
+  hiddenPages,
+  parseHomeSectionOrder,
+  parseVisibility,
+} from "@/lib/visibility";
 
 const validPractice = {
   sportId: "1",
@@ -46,6 +52,22 @@ describe("visibility", () => {
 
   it("falls back to defaults for a missing value", () => {
     expect(parseVisibility(null)).toEqual(DEFAULT_VISIBILITY);
+  });
+});
+
+describe("home section order", () => {
+  it("keeps the original order for existing display settings", () => {
+    expect(parseHomeSectionOrder({ banner: false })).toEqual(DEFAULT_HOME_SECTION_ORDER);
+  });
+
+  it("retains custom positions and appends missing home sections once", () => {
+    const stored = { homeSectionOrder: ["announcements", "hero", "schedulePage", "announcements"] };
+    expect(parseHomeSectionOrder(stored)).toEqual([
+      "announcements",
+      "hero",
+      ...DEFAULT_HOME_SECTION_ORDER.filter((key) => key !== "announcements" && key !== "hero"),
+    ]);
+    expect(parseVisibility(stored)).toEqual(DEFAULT_VISIBILITY);
   });
 });
 

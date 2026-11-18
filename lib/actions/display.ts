@@ -7,7 +7,7 @@ import { siteConfig } from "@/db/schema";
 import type { ActionState } from "@/lib/action-state";
 import { isAllowedBannerUrl } from "@/lib/banner";
 import { TAGS } from "@/lib/queries/cache";
-import { isSectionKey, SECTIONS } from "@/lib/visibility";
+import { DEFAULT_HOME_SECTION_ORDER, HOME_SECTION_ORDER_KEY, isSectionKey, SECTIONS } from "@/lib/visibility";
 import { adminActor, audit, deleteBlobs, failure, invalidate, UNAUTHORIZED } from "./helpers";
 
 /**
@@ -29,6 +29,18 @@ const NO_CONFIG: ActionState = {
   message: "ยังไม่มีข้อมูลงาน กรุณาบันทึกหน้า Settings ก่อน",
 };
 
+async function setDisplayValue(key: string, value: boolean | string[]) {
+  // Update one key atomically so separate display settings don't overwrite each other.
+  const updated = await db
+    .update(siteConfig)
+    .set({
+      visibility: sql`jsonb_set(coalesce(${siteConfig.visibility}, '{}'::jsonb), ${`{${key}}`}::text[], ${JSON.stringify(value)}::jsonb)`,
+    })
+    .where(eq(siteConfig.id, 1))
+    .returning({ id: siteConfig.id });
+  return updated.length > 0;
+}
+
 /** Shows or hides one public section or page. */
 export async function setSectionVisibility(key: string, visible: boolean): Promise<ActionState> {
   const actor = await adminActor();
@@ -38,15 +50,7 @@ export async function setSectionVisibility(key: string, visible: boolean): Promi
   }
 
   try {
-    // Sets one key in place, so two admins toggling different switches don't overwrite each other.
-    const updated = await db
-      .update(siteConfig)
-      .set({
-        visibility: sql`jsonb_set(coalesce(${siteConfig.visibility}, '{}'::jsonb), ${`{${key}}`}::text[], ${JSON.stringify(visible)}::jsonb)`,
-      })
-      .where(eq(siteConfig.id, 1))
-      .returning({ id: siteConfig.id });
-    if (updated.length === 0) return NO_CONFIG;
+    if (!(await setDisplayValue(key, visible))) return NO_CONFIG;
   } catch (error) {
     return failure(error);
   }
@@ -54,6 +58,25 @@ export async function setSectionVisibility(key: string, visible: boolean): Promi
   await audit(actor, "display.toggle", `${visible ? "เปิด" : "ปิด"} ${label}`);
   invalidate(TAGS.config);
   return { ok: true, message: `${visible ? "เปิด" : "ปิด"}การแสดง “${label}” แล้ว` };
+}
+
+export async function saveHomeSectionOrder(order: string[]): Promise<ActionState> {
+  const actor = await adminActor();
+  if (!actor) return UNAUTHORIZED;
+  if (!Array.isArray(order) || order.length !== DEFAULT_HOME_SECTION_ORDER.length ||
+      !DEFAULT_HOME_SECTION_ORDER.every((key) => order.includes(key))) {
+    return { ok: false, message: "ลำดับส่วนของหน้าแรกไม่ถูกต้อง" };
+  }
+
+  try {
+    if (!(await setDisplayValue(HOME_SECTION_ORDER_KEY, order))) return NO_CONFIG;
+  } catch (error) {
+    return failure(error);
+  }
+
+  await audit(actor, "display.homeOrder", "จัดลำดับส่วนของหน้าแรก");
+  invalidate(TAGS.config);
+  return { ok: true, message: "บันทึกลำดับหน้าแรกแล้ว" };
 }
 
 /** Sets the home page cover to an uploaded file, or back to the default with null. */
